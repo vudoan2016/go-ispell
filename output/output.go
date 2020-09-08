@@ -9,7 +9,7 @@ import (
 	"github.com/vudoan2016/ispell/input"
 )
 
-const count int = 20
+const count int = 100
 
 type Vocabulary struct {
 	Word string `json:"Word"`
@@ -34,7 +34,7 @@ func selectWords() []Vocabulary {
 // Respond processes '/' route
 func Respond(ctx *gin.Context) {
 	switch ctx.Request.Header.Get("Accept") {
-	default: //"application/json":
+	case "application/json":
 		vocabs := selectWords()
 		ctx.JSON(http.StatusOK, vocabs)
 	}

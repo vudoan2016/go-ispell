@@ -2,7 +2,6 @@ package input
 
 import (
 	"bufio"
-	"log"
 	"os"
 	"regexp"
 	"strings"
@@ -32,7 +31,8 @@ func cleanText(scanner *bufio.Scanner) []Vocabulary {
 
 			// Indication of the end of an entry (word, type and defition).
 			if line[len(line)-1] == ';' || line[len(line)-1] == '.' {
-				entries = append(entries, Vocabulary{Word: text[0], Type: text[1], Def: strings.Join(text[2:], " ")})
+				_type := text[1]
+				entries = append(entries, Vocabulary{Word: text[0], Type: string(_type[:len(_type)-1]), Def: strings.Join(text[2:], " ")})
 				text = nil
 			}
 		}
@@ -66,7 +66,6 @@ func readText(books []string) error {
 		scanner.Split(bufio.ScanLines)
 
 		Deck = append(Deck, cleanText(scanner)...)
-		log.Println("Count = ", len(Deck))
 		file.Close()
 	}
 	return nil
