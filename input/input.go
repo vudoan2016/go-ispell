@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+const api_key string = "Token a0ece2037f62563e2f38d2099b31fbc5624b11ab"
+
 type Vocabulary struct {
 	Word string
 	Type string
@@ -29,10 +31,15 @@ func cleanText(scanner *bufio.Scanner) []Vocabulary {
 			// split into words
 			text = append(text, strings.Fields(line)...)
 
-			// Indication of the end of an entry (word, type and defition).
+			// Indication of the end of an entry which contains a word, a type and a defition.
 			if line[len(line)-1] == ';' || line[len(line)-1] == '.' {
 				_type := text[1]
-				entries = append(entries, Vocabulary{Word: text[0], Type: string(_type[:len(_type)-1]), Def: strings.Join(text[2:], " ")})
+				_word := text[0]
+				entries = append(entries,
+					Vocabulary{
+						Word: _word,
+						Type: string(_type[:len(_type)-1]),
+						Def:  strings.Join(text[2:], " ")})
 				text = nil
 			}
 		}
