@@ -9,11 +9,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/vudoan2016/ispell/input"
 )
 
 const (
-	count   int    = 20
+	count   int    = 100
 	api_key string = "Token a0ece2037f62563e2f38d2099b31fbc5624b11ab"
 )
 
@@ -63,25 +62,31 @@ func getExample(word string) string {
 	return example
 }
 
-func selectWords() []Vocabulary {
-	var vocabs []Vocabulary
+func selectWords(vocabs *[]Vocabulary) ([]Vocabulary, error) {
 	var i int
+	var out []Vocabulary
 
 	rand.Seed(time.Now().UnixNano())
-	l := len(input.Deck)
+	l := len(*vocabs)
 	for i < count {
-		v := input.Deck[rand.Intn(l)]
-		vocabs = append(vocabs, Vocabulary{Word: v.Word, Type: v.Type, Def: v.Def, Example: getExample(v.Word)})
+		v := (*vocabs)[rand.Intn(l)]
+		out = append(out, Vocabulary{Word: v.Word, Type: v.Type, Def: v.Def, Example: getExample(v.Word)})
 		i++
 	}
-	return vocabs
+	return out, nil
 }
 
 // Respond processes '/' route
-func Respond(ctx *gin.Context) {
-	vocabs := selectWords()
-	switch ctx.Request.Header.Get("Accept") {
-	case "application/json":
-		ctx.JSON(http.StatusOK, vocabs)
+func Respond(vocabs *[]Vocabulary) gin.HandlerFunc {
+	handler := func(ctx *gin.Context) {
+		out, err := selectWords(vocabs)
+		if err == nil {
+			switch ctx.Request.Header.Get("Accept") {
+			case "application/json":
+				ctx.JSON(http.StatusOK, out)
+			}
+		}
 	}
+
+	return gin.HandlerFunc(handler)
 }

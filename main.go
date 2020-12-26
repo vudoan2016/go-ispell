@@ -7,8 +7,11 @@ import (
 )
 
 func main() {
-	books := []string{"input/5000-sat-words.txt"}
-	err := input.Init(books)
+	//books := []string{"input/White Fang.txt"}
+	vocabs := []string{"input/5000-sat-words.txt"}
+	var deck []output.Vocabulary
+
+	deck, err := input.Init(vocabs)
 	if err != nil {
 		panic(err)
 	}
@@ -21,6 +24,6 @@ func main() {
 	})
 
 	// Ready to serve
-	router.GET("/", output.Respond)
+	router.GET("/", output.Respond(&deck))
 	router.Run(":8081")
 }

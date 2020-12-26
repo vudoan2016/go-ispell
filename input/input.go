@@ -5,20 +5,29 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/vudoan2016/ispell/output"
 )
 
-const api_key string = "Token a0ece2037f62563e2f38d2099b31fbc5624b11ab"
+type processFn func([]rune, []output.Vocabulary, []string) ([]output.Vocabulary, []string)
 
-type Vocabulary struct {
-	Word string
-	Type string
-	Def  string
+func processVocab(line []rune, entries []output.Vocabulary, text []string) ([]output.Vocabulary, []string) {
+	// Indication of the end of an entry which contains a word, a type and a defition.
+	if line[len(line)-1] == ';' || line[len(line)-1] == '.' {
+		_type := text[1]
+		_word := text[0]
+		entries = append(entries,
+			output.Vocabulary{
+				Word: _word,
+				Type: string(_type[:len(_type)-1]),
+				Def:  strings.Join(text[2:], " ")})
+		text = nil
+	}
+	return entries, text
 }
 
-var Deck []Vocabulary
-
-func cleanText(scanner *bufio.Scanner) []Vocabulary {
-	var entries []Vocabulary
+func cleanText(scanner *bufio.Scanner, fn processFn) []output.Vocabulary {
+	var entries []output.Vocabulary
 	var text []string
 	space := regexp.MustCompile(`\s+`)
 
@@ -31,23 +40,13 @@ func cleanText(scanner *bufio.Scanner) []Vocabulary {
 			// split into words
 			text = append(text, strings.Fields(line)...)
 
-			// Indication of the end of an entry which contains a word, a type and a defition.
-			if line[len(line)-1] == ';' || line[len(line)-1] == '.' {
-				_type := text[1]
-				_word := text[0]
-				entries = append(entries,
-					Vocabulary{
-						Word: _word,
-						Type: string(_type[:len(_type)-1]),
-						Def:  strings.Join(text[2:], " ")})
-				text = nil
-			}
+			entries, text = fn([]rune(line), entries, text)
 		}
 	}
 	return entries
 }
 
-func splitSentences(data []byte, atEOF bool) (advance int, token []byte, err error) {
+func toSentences(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	for i := 0; i < len(data); i++ {
 		if data[i] == '.' || data[i] == ';' {
 			return i + 1, data[:i], nil
@@ -62,23 +61,24 @@ func splitSentences(data []byte, atEOF bool) (advance int, token []byte, err err
 	return 0, data, bufio.ErrFinalToken
 }
 
-func readText(books []string) error {
+func readText(books []string) ([]output.Vocabulary, error) {
+	var deck []output.Vocabulary
 	for _, book := range books {
 		file, err := os.Open(book)
 		if err != nil {
-			return err
+			return deck, err
 		}
 
 		scanner := bufio.NewScanner(file)
 		scanner.Split(bufio.ScanLines)
 
-		Deck = append(Deck, cleanText(scanner)...)
+		deck = append(deck, cleanText(scanner, processVocab)...)
 		file.Close()
 	}
-	return nil
+	return deck, nil
 }
 
-func Init(books []string) error {
-	err := readText(books)
-	return err
+func Init(books []string) ([]output.Vocabulary, error) {
+	deck, err := readText(books)
+	return deck, err
 }
