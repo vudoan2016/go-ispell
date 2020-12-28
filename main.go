@@ -7,11 +7,12 @@ import (
 )
 
 func main() {
-	//books := []string{"input/White Fang.txt"}
-	vocabs := []string{"input/5000-sat-words.txt"}
-	var deck []output.Vocabulary
+	src := []input.Source{input.Source{Title: "5000 SAT words", File: "input/5000-sat-words.txt", Fn: input.ProcessVocab},
+		input.Source{Title: "White Fang", File: "input/White Fang.txt", Fn: input.ProcessBook}}
 
-	deck, err := input.Init(vocabs)
+	//var deck map[string]output.Vocabulary
+
+	_, selects, err := input.Init(src)
 	if err != nil {
 		panic(err)
 	}
@@ -24,6 +25,6 @@ func main() {
 	})
 
 	// Ready to serve
-	router.GET("/", output.Respond(&deck))
+	router.GET("/", output.Respond(&selects))
 	router.Run(":8081")
 }
